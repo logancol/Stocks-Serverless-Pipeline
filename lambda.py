@@ -1,6 +1,10 @@
 import logging
 import json
-from dotenv import load_dotenv
+import os
+from datetime import timedelta, date
+from decimal import Decimal
+import boto3
+
 from movers import fetch_biggest_mover
 
 logging.basicConfig(
@@ -8,10 +12,9 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger()
-load_dotenv()
 
 """
-AWS Lambda function that connects to a stock api, iterates through the watchlist, and
+Lambda function that connects to massive, iterates through the watchlist, and
 calculates which stock had the highest percentage change for the day.
 """
 
@@ -22,18 +25,43 @@ def lambda_handler(event, _):
     """
     Lambda handler that wraps mover fetching and logging behavior
     """
-    
     try:
-        mover = fetch_biggest_mover(WATCHLIST)
-        response = {
-            "statusCode": 200,
-            "body": json.dumps({'biggest_mover': mover})
+        dt = date.today()
+        use_date = dt.isoformat()
+        winner_symbol, percent_change, close_price = fetch_biggest_mover(WATCHLIST, use_date=dt)
+
+        if not winner_symbol:
+            raise RuntimeError("No winner computed (all symbols failed)")
+
+        table_name = os.getenv("DYNAMODB_TABLE_NAME")
+        if not table_name:
+            raise RuntimeError("Missing env var DYNAMODB_TABLE_NAME")
+
+        dynamodb = boto3.resource("dynamodb")
+        table = dynamodb.Table(table_name)
+
+        item = {
+            "date": use_date,
+            "ticker_symbol": winner_symbol,
+            "percent_change": Decimal(str(percent_change)),
+            "closing_price": Decimal(str(close_price)),
         }
-        logger.info(f"Lamda succeeded: {mover}")
-        return response
+        table.put_item(Item=item)
+
+        response_item = {
+            "date": use_date,
+            "ticker_symbol": winner_symbol,
+            "percent_change": float(percent_change),
+            "closing_price": float(close_price),
+        }
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"stored": True, "winner": response_item}),
+        }
     
     except Exception as e:
-        logger.error(f"Lambda failed: {e}")
+        logger.error("Movement lambda failed")
         return {
             "statusCode": 500, 
             "body": json.dumps({

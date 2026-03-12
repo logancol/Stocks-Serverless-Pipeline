@@ -20,3 +20,15 @@ variable "endpoint_path" {
     type = string
     default = "movers"
 }
+
+variable "massive_api_key" {
+  description = "Massive API key for stock data"
+  type        = string
+  sensitive   = true
+}
+
+variable "dynamodb_table_name" {
+    description = "DynamoDB table name for daily winning stock"
+    type        = string
+    default     = "daily-winning-stock"
+}

@@ -1,1 +1,9 @@
-.env
+*.env
+*.tfvars
+build/
+__pycache__/
+*.pyc
+infrastructure/.terraform/
+infrastructure/terraform.tfstate.*
+infrastructure/deployment_package.zip
+infrastructure/terraform.tfstate
