@@ -1,6 +1,6 @@
 output "endpoint_url" {
   description = "Invoke URL for the API Gateway endpoint"
-  value = "https://${aws_api_gateway_rest_api.movement_rest_api.id}.execute-api.${var.myregion}.amazonaws.com/${aws_api_gateway_stage.movers_deploy.stage_name}/${var.endpoint_path}"
+  value       = "https://${aws_api_gateway_rest_api.movement_rest_api.id}.execute-api.${var.myregion}.amazonaws.com/${aws_api_gateway_stage.movers_deploy.stage_name}/${var.endpoint_path}"
 }
 
 output "dynamodb_table_name" {
@@ -11,4 +11,8 @@ output "dynamodb_table_name" {
 output "dynamodb_table_arn" {
   description = "DynamoDB table ARN storing daily winner"
   value       = aws_dynamodb_table.daily_winners.arn
+}
+
+output "frontend_website_url" {
+  value = aws_s3_bucket_website_configuration.frontend.website_endpoint
 }

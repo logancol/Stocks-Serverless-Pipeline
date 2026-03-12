@@ -270,8 +270,3 @@ resource "aws_s3_bucket_policy" "frontend_public" {
 
   depends_on = [aws_s3_bucket_public_access_block.frontend]
 }
-
-# prints the url after apply for easy nav
-output "frontend_website_url" {
-  value = aws_s3_bucket_website_configuration.frontend.website_endpoint
-}
